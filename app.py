@@ -5,8 +5,8 @@ from encryption import encrypt_data, decrypt_data, batch_encrypt_data, batch_dec
 app = Flask(__name__)
 
 # Simple auth
-USERNAME = "admin"
-PASSWORD = "changeme"
+USERNAME = os.getenv("APP_USERNAME")
+PASSWORD = os.getenv("APP_PASSWORD")
 
 def validateCredentials(username, password):
     return username == USERNAME and password == PASSWORD
@@ -14,6 +14,9 @@ def validateCredentials(username, password):
 def require_auth(f):
     @wraps(f)
     def wrapper(*args, **kwargs):
+        if USERNAME is None or PASSWORD is None:
+            return jsonify({"error": "Server misconfiguration: credentials not set"}), 500
+
         auth = request.authorization
         if not auth or not validateCredentials(auth.username, auth.password):
             return jsonify({"error": "Unauthorized"}), 401

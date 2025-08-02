@@ -14,7 +14,7 @@ def _unpad(s):
 
 def derive_key_iv(key_str):
     key = hashlib.sha256(key_str.encode()).digest()
-    iv = hashlib.md5(key).digest()  # Deterministic IV derived from key
+    iv = hashlib.md5(key).digest()
     return key, iv
 
 def encrypt_data(data, key_str):
