@@ -1,15 +1,31 @@
 from flask import Flask, request, jsonify
 from functools import wraps
+import os
+import logging
+from datetime import datetime
 from encryption import encrypt_data, decrypt_data, batch_encrypt_data, batch_decrypt_data
+import sys
 
 app = Flask(__name__)
 
-# Simple auth
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S',
+    handlers=[
+        logging.FileHandler('/logs/access.log'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
 USERNAME = os.getenv("APP_USERNAME")
 PASSWORD = os.getenv("APP_PASSWORD")
 
 def validateCredentials(username, password):
     return username == USERNAME and password == PASSWORD
+
+def log_request(username, action):
+    logging.info(f"User '{username}' requested to {action}")
 
 def require_auth(f):
     @wraps(f)
@@ -26,6 +42,9 @@ def require_auth(f):
 @app.route('/encrypt', methods=['POST'])
 @require_auth
 def encrypt_route():
+    username = request.authorization.username
+    log_request(username, "encrypt")
+
     content = request.json
     data = content.get("data")
     key = content.get("key")
@@ -42,6 +61,9 @@ def encrypt_route():
 @app.route('/decrypt', methods=['POST'])
 @require_auth
 def decrypt_route():
+    username = request.authorization.username
+    log_request(username, "decrypt")
+
     content = request.json
     ciphertext = content.get("ciphertext")
     key = content.get("key")
@@ -58,6 +80,9 @@ def decrypt_route():
 @app.route('/batch_encrypt', methods=['POST'])
 @require_auth
 def batch_encrypt_route():
+    username = request.authorization.username
+    log_request(username, "encrypt batch")
+
     content = request.json
     data_list = content.get("data")
     key = content.get("key")
@@ -74,6 +99,9 @@ def batch_encrypt_route():
 @app.route('/batch_decrypt', methods=['POST'])
 @require_auth
 def batch_decrypt_route():
+    username = request.authorization.username
+    log_request(username, "decrypt batch")
+
     content = request.json
     ciphertext_list = content.get("ciphertext")
     key = content.get("key")
